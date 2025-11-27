@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Home, FileText, Mic, Send, Sparkles, Pill, Clock, Settings as SettingsIcon } from 'lucide-react';
+import { Home, FileText, Mic, Send, Sparkles, Pill, Clock, Settings as SettingsIcon, CheckCircle, ArrowLeft } from 'lucide-react';
 
 // Define types for SpeechRecognition
 interface IWindow extends Window {
@@ -18,6 +18,8 @@ export default function MainChatScreen() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [ticketState, setTicketState] = useState<'chat' | 'decision' | 'summary' | 'success'>('chat');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
 
@@ -109,7 +111,14 @@ export default function MainChatScreen() {
       if (!response.ok) throw new Error('Failed to fetch');
 
       const data = await response.json();
-      setMessages(prev => [...prev, data]);
+      
+      let content = data.content || "";
+      if (content.includes('[COMPLETE]')) {
+        content = content.replace('[COMPLETE]', '').trim();
+        setTicketState('decision');
+      }
+
+      setMessages(prev => [...prev, { role: data.role, content }]);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -127,6 +136,8 @@ export default function MainChatScreen() {
     if (currentTab === 'home') {
       setMessages([]); // Reset to initial state
       setInput('');
+      setShowSuggestions(false);
+      setTicketState('chat');
     } else {
       setCurrentTab('home');
     }
@@ -161,6 +172,54 @@ export default function MainChatScreen() {
         {/* HOME TAB */}
         {currentTab === 'home' && (
           <>
+            {ticketState === 'summary' ? (
+              <div className="w-full flex flex-col items-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="w-full bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-4">Review your Report</h2>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Type</label>
+                      <div className="text-lg font-medium text-gray-800">Sick Leave</div>
+                    </div>
+                    
+                    <div>
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Details</label>
+                      <p className="text-base text-gray-600 mt-1 bg-gray-50 p-3 rounded-xl">
+                        User reported not feeling well and requested sick leave. Symptoms noted. Expecting to be out for 2 days.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-8">
+                    <button 
+                      onClick={() => setTicketState('success')}
+                      className="w-full bg-purple-600 text-white text-lg font-semibold py-4 rounded-2xl shadow-lg hover:bg-purple-700 transition-all active:scale-95"
+                    >
+                      Submit Ticket
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : ticketState === 'success' ? (
+              <div className="w-full flex flex-col items-center justify-center h-full space-y-6 animate-in zoom-in duration-500 mt-20">
+                <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-2">
+                  <CheckCircle className="w-12 h-12 text-green-600" />
+                </div>
+                <h2 className="text-3xl font-bold text-gray-800 text-center">Ticket Submitted!</h2>
+                <p className="text-gray-500 text-center max-w-xs">
+                  Your report has been successfully sent to HR. You will receive a confirmation email shortly.
+                </p>
+                <button 
+                  onClick={handleHomeClick}
+                  className="mt-8 px-8 py-3 bg-white border border-gray-200 text-gray-700 font-semibold rounded-full hover:bg-gray-50 transition-all"
+                >
+                  Back to Home
+                </button>
+              </div>
+            ) : (
+              // Normal Chat View
+              <>
             {messages.length === 0 ? (
               <div className="w-full flex flex-col items-center space-y-8 mt-4">
                 {/* Greeting */}
@@ -173,30 +232,64 @@ export default function MainChatScreen() {
                   </div>
                 </div>
 
-                {/* Action Buttons Container */}
-                <div className="w-full flex flex-row gap-4">
-                  <button 
-                    onClick={() => {}} 
-                    className="flex-1 flex flex-col items-center justify-center bg-white p-6 rounded-3xl shadow-sm hover:shadow-md transition-all active:scale-95 duration-200 h-40"
-                    aria-label="Common questions"
-                  >
-                    <div className="p-4 bg-purple-50 rounded-full mb-3">
-                      <Pill className="w-8 h-8 text-purple-600" /> 
-                    </div>
-                    <span className="text-lg font-medium text-gray-800">Questions</span>
-                  </button>
+                {/* Action Buttons or Suggestions */}
+                {!showSuggestions ? (
+                  <div className="w-full flex flex-row gap-4">
+                    <button 
+                      onClick={() => setShowSuggestions(true)} 
+                      className="flex-1 flex flex-col items-center justify-center bg-white p-6 rounded-3xl shadow-sm hover:shadow-md transition-all active:scale-95 duration-200 h-40"
+                      aria-label="Common questions"
+                    >
+                      <div className="p-4 bg-purple-50 rounded-full mb-3">
+                        <Pill className="w-8 h-8 text-purple-600" /> 
+                      </div>
+                      <span className="text-lg font-medium text-gray-800">Questions</span>
+                    </button>
 
-                  <button 
-                    onClick={() => handleSend("Show me instruction files")}
-                    className="flex-1 flex flex-col items-center justify-center bg-white p-6 rounded-3xl shadow-sm hover:shadow-md transition-all active:scale-95 duration-200 h-40"
-                    aria-label="View instruction files"
-                  >
-                    <div className="p-4 bg-purple-50 rounded-full mb-3">
-                      <FileText className="w-8 h-8 text-purple-600" />
+                    <button 
+                      onClick={() => handleSend("Show me instruction files")}
+                      className="flex-1 flex flex-col items-center justify-center bg-white p-6 rounded-3xl shadow-sm hover:shadow-md transition-all active:scale-95 duration-200 h-40"
+                      aria-label="View instruction files"
+                    >
+                      <div className="p-4 bg-purple-50 rounded-full mb-3">
+                        <FileText className="w-8 h-8 text-purple-600" />
+                      </div>
+                      <span className="text-lg font-medium text-gray-800">Instruction Files</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-full flex flex-col space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="flex items-center justify-between px-2">
+                      <h3 className="text-lg font-semibold text-gray-800">Common questions</h3>
+                      <button 
+                        onClick={() => setShowSuggestions(false)}
+                        className="text-sm text-purple-600 font-medium hover:text-purple-800"
+                      >
+                        Close
+                      </button>
                     </div>
-                    <span className="text-lg font-medium text-gray-800">Instruction Files</span>
-                  </button>
-                </div>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        "Sick leave",
+                        "Report mistake",
+                        "Late to work",
+                        "want to report a problem",
+                        "Do you have a doctor's note or medical certificate"
+                      ].map((text) => (
+                        <button
+                          key={text}
+                          onClick={() => {
+                            handleSend(text);
+                            setShowSuggestions(false);
+                          }}
+                          className="px-4 py-2 bg-white border border-purple-100 text-purple-700 rounded-full font-medium shadow-sm hover:bg-purple-50 active:scale-95 transition-all text-left"
+                        >
+                          {text}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
                 <div className="w-full flex flex-col space-y-4 pb-4 pt-4">
@@ -216,6 +309,8 @@ export default function MainChatScreen() {
                     )}
                     <div ref={messagesEndRef} />
                 </div>
+            )}
+              </>
             )}
           </>
         )}
@@ -275,40 +370,57 @@ export default function MainChatScreen() {
       </main>
 
       {/* Bottom Input Bar - Only visible on Home */}
-      {currentTab === 'home' && (
+      {currentTab === 'home' && ticketState !== 'summary' && ticketState !== 'success' && (
         <div className="fixed bottom-[80px] left-0 right-0 p-4 w-full max-w-lg mx-auto z-20 pointer-events-none">
-          <div className="pointer-events-auto relative flex items-center bg-white rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-100 p-2 pl-6">
-            
-            <input
-              type="text"
-              placeholder="Ask me about anything"
-              className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400 text-base"
-              aria-label="Chat message input"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-            
-            <div className="flex items-center space-x-2">
-              <button 
-                className={`p-2 transition-colors ${isListening ? 'text-red-500 animate-pulse' : 'text-gray-400 hover:text-gray-600'}`}
-                aria-label={isListening ? "Stop listening" : "Start voice input"}
-                onClick={toggleListening}
-              >
-                <Mic className={`w-5 h-5 ${isListening ? 'fill-current' : ''}`} />
-              </button>
-              
-              <button 
-                className="p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors shadow-md active:bg-purple-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Send message"
-                onClick={() => handleSend()}
-                disabled={isLoading || !input.trim()}
-              >
-                <Send className="w-5 h-5 fill-current translate-x-[-1px] translate-y-[1px]" />
-              </button>
+          {ticketState === 'decision' ? (
+            <div className="pointer-events-auto w-full flex flex-col space-y-3 animate-in slide-in-from-bottom-10 duration-300">
+               <button 
+                  onClick={() => setTicketState('summary')}
+                  className="w-full bg-purple-600 text-white text-lg font-semibold py-3 rounded-2xl shadow-lg hover:bg-purple-700 active:scale-95 transition-all"
+               >
+                 End Conversation & Review
+               </button>
+               <button 
+                  onClick={() => setTicketState('chat')}
+                  className="w-full bg-white text-purple-600 text-lg font-semibold py-3 rounded-2xl border-2 border-purple-100 hover:bg-purple-50 active:scale-95 transition-all"
+               >
+                 Ask More Questions
+               </button>
             </div>
+          ) : (
+            <div className="pointer-events-auto relative flex items-center bg-white rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-gray-100 p-2 pl-6">
+              
+              <input
+                type="text"
+                placeholder="Ask me about anything"
+                className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400 text-base"
+                aria-label="Chat message input"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+              />
+              
+              <div className="flex items-center space-x-2">
+                <button 
+                  className={`p-2 transition-colors ${isListening ? 'text-red-500 animate-pulse' : 'text-gray-400 hover:text-gray-600'}`}
+                  aria-label={isListening ? "Stop listening" : "Start voice input"}
+                  onClick={toggleListening}
+                >
+                  <Mic className={`w-5 h-5 ${isListening ? 'fill-current' : ''}`} />
+                </button>
+                
+                <button 
+                  className="p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors shadow-md active:bg-purple-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Send message"
+                  onClick={() => handleSend()}
+                  disabled={isLoading || !input.trim()}
+                >
+                  <Send className="w-5 h-5 fill-current translate-x-[-1px] translate-y-[1px]" />
+                </button>
+              </div>
 
-          </div>
+            </div>
+          )}
         </div>
       )}
 
