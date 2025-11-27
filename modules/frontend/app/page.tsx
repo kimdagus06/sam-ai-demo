@@ -24,6 +24,8 @@ export default function MainChatScreen() {
   const [activeFlow, setActiveFlow] = useState<'none' | 'late_to_work' | 'call_manager'>('none');
   const [isCalling, setIsCalling] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [reportType, setReportType] = useState<'Sick Leave' | 'Late Arrival' | null>(null);
+  const [arrivalEstimate, setArrivalEstimate] = useState<string>('');
   const [summaryData, setSummaryData] = useState({ type: 'Sick Leave', details: 'User reported not feeling well and requested sick leave. Symptoms noted. Expecting to be out for 2 days.' });
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -147,12 +149,15 @@ export default function MainChatScreen() {
       setTicketState('chat');
       setActiveFlow('none');
       setSelectedImage(null);
+      setReportType(null);
+      setArrivalEstimate('');
     } else {
       setCurrentTab('home');
     }
   };
 
   const handleLateToWork = () => {
+    setReportType('Late Arrival');
     setActiveFlow('late_to_work');
     setViewState('main');
     const question = "When will you arrive?";
@@ -261,13 +266,18 @@ export default function MainChatScreen() {
 
                     <div>
                       <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Type</label>
-                      <div className="text-lg font-medium text-gray-800">{summaryData.type}</div>
+                      <div className="text-lg font-medium text-gray-800">
+                        {reportType === 'Late Arrival' ? 'Late Arrival' : 'Sick Leave'}
+                      </div>
                     </div>
                     
                     <div>
                       <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Details</label>
                       <p className="text-base text-gray-600 mt-1 bg-gray-50 p-3 rounded-xl">
-                        {summaryData.details}
+                        {reportType === 'Late Arrival' 
+                            ? `Arriving in ${arrivalEstimate}`
+                            : summaryData.details
+                        }
                       </p>
                     </div>
                   </div>
@@ -299,16 +309,22 @@ export default function MainChatScreen() {
               // Normal Chat View
               <>
             {messages.length === 0 ? (
-              <div className="w-full flex flex-col items-center space-y-8 mt-4">
+              <div className="w-full flex flex-col items-center mt-20 mb-16 max-w-2xl mx-auto">
                 {/* Greeting */}
-                <div className="flex flex-col items-center space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <h1 className="text-2xl sm:text-3xl font-semibold text-center leading-tight text-gray-800">
-                      Hi, Fatima, how can i help you today?
+                <div className="flex flex-col items-center text-center">
+                  <span className="text-3xl sm:text-4xl text-slate-600 font-medium mb-4">
+                    Hi, Fatima,
+                  </span>
+                  <div className="flex items-center gap-3 justify-center">
+                    <h1 className="text-5xl sm:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                      How can I help you today?
                     </h1>
-                    <Sparkles className="w-6 h-6 text-primary fill-purple-100" />
+                    <Sparkles className="w-12 h-12 text-primary fill-purple-100 flex-shrink-0" />
                   </div>
                 </div>
+                
+                {/* Spacer */}
+                <div className="h-12"></div>
 
                 {/* Action Buttons or Suggestions */}
                 {viewState === 'main' && (
@@ -351,6 +367,7 @@ export default function MainChatScreen() {
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => {
+                          setReportType('Sick Leave');
                           handleSend("Sick leave");
                           setViewState('main');
                         }}
@@ -542,7 +559,7 @@ export default function MainChatScreen() {
                               { role: 'user', content: time },
                               { role: 'assistant', content: "Understood. I have notified your manager." }
                            ]);
-                           setSummaryData({ type: 'Late to Work', details: `User is running late. Estimated arrival in ${time}.` });
+                           setArrivalEstimate(time);
                            setTicketState('summary');
                        }}
                        className="px-4 py-2 bg-purple-100 text-primary rounded-full font-semibold shadow-sm border border-purple-200 hover:bg-purple-200 active:scale-95 transition-all"
