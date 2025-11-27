@@ -9,13 +9,6 @@ export const StatusBar = () => {
           <span className="font-sans text-gray-900">12:30</span>
        </div>
 
-       {/* Center: App Logo */}
-       <div className="flex items-center space-x-2 absolute left-1/2 transform -translate-x-1/2 opacity-90 hover:opacity-100 transition-opacity">
-        <div className="p-1 bg-teal-50 rounded-full">
-           <Leaf className="w-4 h-4 text-teal-600 fill-teal-100" />
-        </div>
-        <span className="text-xs font-bold text-gray-600 tracking-wide uppercase">SAM AI</span>
-       </div>
 
        {/* Right: Status Icons */}
        <div className="flex-1 flex justify-end items-center space-x-3">

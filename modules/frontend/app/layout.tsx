@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import { StatusBar } from "./components/StatusBar";
 
@@ -22,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className="antialiased bg-white text-slate-900 pt-12"
+        className={`${GeistSans.className} antialiased bg-white text-slate-900 pt-12`}
         suppressHydrationWarning={true}
       >
         <StatusBar />

@@ -21,7 +21,7 @@ export default function MainChatScreen() {
   const [isListening, setIsListening] = useState(false);
   const [viewState, setViewState] = useState<'main' | 'questions' | 'problems'>('main');
   const [ticketState, setTicketState] = useState<'chat' | 'decision' | 'summary' | 'success'>('chat');
-  const [activeFlow, setActiveFlow] = useState<'none' | 'late_to_work' | 'call_manager'>('none');
+  const [activeFlow, setActiveFlow] = useState<'none' | 'late_to_work' | 'call_manager' | 'lost_key'>('none');
   const [isCalling, setIsCalling] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [reportType, setReportType] = useState<'Sick Leave' | 'Late Arrival' | null>(null);
@@ -162,6 +162,33 @@ export default function MainChatScreen() {
     setViewState('main');
     const question = "When will you arrive?";
     setMessages(prev => [...prev, { role: 'assistant', content: question }]);
+  };
+
+  const handleForgotKey = () => {
+    setViewState('main');
+    setActiveFlow('lost_key');
+    setMessages(prev => [...prev, 
+        { role: 'user', content: "Forgot a key/card" },
+        { role: 'assistant', content: "Don't worry. Do you need me to notify the Security Desk for a temporary pass?" }
+    ]);
+  };
+
+  const handleNotifySecurity = () => {
+      setMessages(prev => [...prev, 
+          { role: 'user', content: "Yes, notify Security" },
+          { role: 'assistant', content: "Security has been notified. Please proceed to the front desk." }
+      ]);
+      setActiveFlow('none');
+      // Show success state or back to home button logic
+      setTicketState('success'); // Reusing success state for simplicity or create a custom one
+  };
+
+  const handleFoundKey = () => {
+      setMessages(prev => [...prev, 
+          { role: 'user', content: "No, I found it" },
+          { role: 'assistant', content: "Great! Have a productive day." }
+      ]);
+      setActiveFlow('none');
   };
 
   const handleReportProblem = () => {
@@ -309,22 +336,19 @@ export default function MainChatScreen() {
               // Normal Chat View
               <>
             {messages.length === 0 ? (
-              <div className="w-full flex flex-col items-center mt-20 mb-16 max-w-2xl mx-auto">
+              <div className="w-full flex flex-col items-center mt-24 mb-16 max-w-2xl mx-auto">
                 {/* Greeting */}
-                <div className="flex flex-col items-center text-center">
-                  <span className="text-3xl sm:text-4xl text-slate-600 font-medium mb-4">
-                    Hi, Fatima,
+                <div className="flex flex-col items-center text-center px-4">
+                  <span className="text-xl font-medium text-gray-500 mb-4">
+                    Hi, Fatima
                   </span>
-                  <div className="flex items-center gap-3 justify-center">
-                    <h1 className="text-5xl sm:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight">
-                      How can I help you today?
-                    </h1>
-                    <Sparkles className="w-12 h-12 text-primary fill-purple-100 flex-shrink-0" />
-                  </div>
+                  <h1 className="text-5xl sm:text-6xl font-extrabold text-gray-900 leading-tight tracking-tight">
+                    How can I help you today?
+                  </h1>
                 </div>
                 
                 {/* Spacer */}
-                <div className="h-12"></div>
+                <div className="h-16"></div>
 
                 {/* Action Buttons or Suggestions */}
                 {viewState === 'main' && (
@@ -413,10 +437,7 @@ export default function MainChatScreen() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button
-                        onClick={() => {
-                          handleSend("Forgot a key/card");
-                          setViewState('main');
-                        }}
+                        onClick={handleForgotKey}
                         className="px-4 py-2 bg-white border border-purple-100 text-primary rounded-full font-medium shadow-sm hover:bg-purple-50 active:scale-95 transition-all text-left"
                       >
                         Forgot a key/card
@@ -579,6 +600,23 @@ export default function MainChatScreen() {
                     <span>Call Manager</span>
                 </button>
             )}
+
+            {activeFlow === 'lost_key' && (
+                <div className="flex gap-2 w-full justify-center">
+                    <button
+                        onClick={handleNotifySecurity}
+                        className="px-6 py-3 bg-green-500 text-white rounded-full font-bold shadow-lg hover:bg-green-600 active:scale-95 transition-all"
+                    >
+                        Yes, notify Security
+                    </button>
+                     <button
+                        onClick={handleFoundKey}
+                        className="px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-full font-bold shadow-sm hover:bg-gray-50 active:scale-95 transition-all"
+                    >
+                        No, I found it
+                    </button>
+                </div>
+            )}
           </div>
 
           {/* Image Preview Modal / Card */}
@@ -665,6 +703,11 @@ export default function MainChatScreen() {
       )}
 
       {/* Bottom Navigation Bar */}
+      {/* Copyright Footer */}
+      {currentTab === 'home' && <div className="fixed bottom-[76px] w-full text-center pointer-events-none z-0">
+          <span className="text-[10px] text-gray-300 font-medium">run by <strong>Anduril</strong></span>
+      </div>}
+
       <nav className="fixed bottom-0 w-full bg-white border-t border-gray-100 flex justify-around items-center py-3 pt-4 pb-6 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-30">
         <button 
           onClick={handleHomeClick}
