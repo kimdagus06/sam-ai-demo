@@ -17,12 +17,13 @@ export default function MainChatScreen() {
     scrollToBottom();
   }, [messages, isLoading]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+  const handleSend = async (messageText?: string) => {
+    const textToSend = messageText || input;
+    if (!textToSend.trim() || isLoading) return;
 
-    const userMessage = { role: 'user', content: input };
+    const userMessage = { role: 'user', content: textToSend };
     setMessages(prev => [...prev, userMessage]);
-    setInput('');
+    if (!messageText) setInput(''); // Clear input only if it was typed
     setIsLoading(true);
 
     try {
@@ -81,19 +82,38 @@ export default function MainChatScreen() {
             {/* Action Buttons Container */}
             <div className="w-full grid grid-cols-2 gap-4">
               {/* Button 1: Common questions */}
-              <button 
-                className="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow space-y-3 h-32 active:scale-95 duration-200"
-                aria-label="View common questions"
-              >
-                <div className="p-3 bg-gray-50 rounded-full">
-                  <Paperclip className="w-6 h-6 text-gray-600" />
+              <div className="flex flex-col bg-white p-6 rounded-2xl shadow-sm">
+                <div className="flex flex-col items-center space-y-3 mb-4">
+                    <div className="p-3 bg-gray-50 rounded-full">
+                      <Paperclip className="w-6 h-6 text-gray-600" />
+                    </div>
+                    <span className="text-sm font-medium text-gray-700">Common questions</span>
                 </div>
-                <span className="text-sm font-medium text-gray-700">Common questions</span>
-              </button>
+                <div className="flex flex-wrap gap-2 justify-center">
+                    <button 
+                        onClick={() => handleSend("I need to request sick leave")}
+                        className="px-3 py-1.5 bg-white border border-purple-200 text-purple-700 rounded-full text-xs font-medium hover:bg-purple-50 transition-colors active:bg-purple-100"
+                    >
+                        Sick leave
+                    </button>
+                    <button 
+                        onClick={() => handleSend("I need to ask for help")}
+                        className="px-3 py-1.5 bg-white border border-purple-200 text-purple-700 rounded-full text-xs font-medium hover:bg-purple-50 transition-colors active:bg-purple-100"
+                    >
+                        Ask for help
+                    </button>
+                    <button 
+                        onClick={() => handleSend("I am late to work")}
+                        className="px-3 py-1.5 bg-white border border-purple-200 text-purple-700 rounded-full text-xs font-medium hover:bg-purple-50 transition-colors active:bg-purple-100"
+                    >
+                        Late to work
+                    </button>
+                </div>
+              </div>
 
               {/* Button 2: Instruction Files */}
               <button 
-                className="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow space-y-3 h-32 active:scale-95 duration-200"
+                className="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow space-y-3 h-full active:scale-95 duration-200"
                 aria-label="View instruction files"
               >
                 <div className="p-3 bg-gray-50 rounded-full">
@@ -150,7 +170,7 @@ export default function MainChatScreen() {
             <button 
               className="p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors shadow-md active:bg-purple-800 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Send message"
-              onClick={handleSend}
+              onClick={() => handleSend()}
               disabled={isLoading || !input.trim()}
             >
               <Send className="w-5 h-5 fill-current translate-x-[-1px] translate-y-[1px]" />
