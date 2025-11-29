@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Home, FileText, Mic, Send, Sparkles, Pill, Clock, Settings as SettingsIcon, CheckCircle, ArrowLeft, Upload, X, Image as ImageIcon, Phone, Shield, Eye, Ear, Hand, Brain, Palette, Globe, PersonStanding, ClipboardList, Trash2, Square, ChevronDown, ChevronUp, Brush, TriangleAlert, Siren } from 'lucide-react';
 import CallOverlay from './components/CallOverlay';
 import { StatusBar } from './components/StatusBar';
@@ -83,6 +84,26 @@ export default function MainChatScreen() {
       scrollToBottom();
     }
   }, [messages, isLoading, currentTab]);
+
+  // Effect to handle "I am done" suggestion automatically
+  useEffect(() => {
+      if (messages.length > 0) {
+          const lastMsg = messages[messages.length - 1];
+          if (lastMsg.role === 'assistant') {
+               const hiddenTagRegex = /\|\|.*?\|\|/g;
+               const tags = lastMsg.content.match(hiddenTagRegex) || [];
+               
+               const suggestTag = tags.find(t => t.startsWith('||SUGGEST:'));
+               const suggestions = suggestTag 
+                    ? suggestTag.replace('||SUGGEST:', '').replace('||', '').split(',').map(s => s.trim())
+                    : [];
+               
+               if (suggestions.some(s => s.includes('I am done')) && ticketState === 'chat') {
+                   setTicketState('decision');
+               }
+          }
+      }
+  }, [messages, ticketState]);
 
   // Initialize Speech Recognition
   useEffect(() => {
@@ -567,36 +588,72 @@ export default function MainChatScreen() {
     return (
         <div className="w-full flex flex-col space-y-4 pb-4 pt-4">
             {messages.map((msg, index) => {
-                const [textPart, suggestionPart] = msg.content.split('[SUGGESTION|');
-                const suggestion = suggestionPart ? suggestionPart.replace(']', '').split('|') : null;
+                // Tag stripping logic
+                let displayContent = msg.content;
+                const hiddenTagRegex = /\|\|.*?\|\|/g;
+                const tags = displayContent.match(hiddenTagRegex) || [];
+                displayContent = displayContent.replace(hiddenTagRegex, '').trim();
+
+                // Check for suggestion tags
+                const suggestTag = tags.find(t => t.startsWith('||SUGGEST:'));
+                const suggestions = suggestTag 
+                    ? suggestTag.replace('||SUGGEST:', '').replace('||', '').split(',').map(s => s.trim())
+                    : [];
+
+                // Legacy split check (keeping for compatibility if needed, though we are moving to ||TAG||)
+                const [textPart, suggestionPart] = displayContent.split('[SUGGESTION|');
+                const legacySuggestion = suggestionPart ? suggestionPart.replace(']', '').split('|') : null;
+
+                const hasDoneSuggestion = suggestions.some(s => s.includes('I am done'));
 
                 return (
                 <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[80%] p-4 rounded-2xl ${msg.role === 'user' ? 'bg-primary text-white rounded-br-none' : 'bg-white text-gray-800 shadow-md rounded-bl-none'}`}>
-                        {textPart}
+                         <div className={`prose ${msg.role === 'user' ? 'prose-invert' : ''} max-w-none`}>
+                            <ReactMarkdown components={{
+                                strong: ({node, ...props}) => <span className="font-bold text-[#9747FF]" {...props} />
+                            }}>
+                                {displayContent}
+                            </ReactMarkdown>
+                        </div>
                         
                         {msg.image && (
                             <img src={msg.image} alt="Reference" className="rounded-xl mt-2 mb-1 w-full h-48 object-cover border border-gray-200" />
                         )}
 
-                        {suggestion && (
+                        {/* Render Suggestion Chips */}
+                         {suggestions.length > 0 && !hasDoneSuggestion && (
+                            <div className="flex flex-wrap gap-2 mt-3">
+                                {suggestions.map((s, i) => (
+                                    <button 
+                                        key={i}
+                                        onClick={() => handleSend(s)}
+                                        className="px-3 py-2 bg-purple-50 text-primary text-sm font-semibold rounded-lg border border-purple-100 hover:bg-purple-100 transition-colors text-left"
+                                    >
+                                        {s}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {legacySuggestion && (
                             <div className="mt-3 bg-purple-50 border border-purple-200 rounded-xl p-4">
                                 <div className="flex items-center space-x-2 mb-2">
                                     <Sparkles className="w-4 h-4 text-primary" />
                                     <span className="text-xs font-bold text-primary uppercase tracking-wide">AI Recommendation</span>
                                 </div>
-                                <div className="text-2xl font-bold text-gray-900">{suggestion[0]}</div>
-                                <div className="text-sm text-gray-500 mb-4">{suggestion[1]}</div>
+                                <div className="text-2xl font-bold text-gray-900">{legacySuggestion[0]}</div>
+                                <div className="text-sm text-gray-500 mb-4">{legacySuggestion[1]}</div>
                                 
                                 <div className="flex flex-col space-y-2">
                                     <button 
                                         onClick={() => {
                                             setReportType('Sick Leave'); 
-                                            handleSend(`Accept ${suggestion[0]}`);
+                                            handleSend(`Accept ${legacySuggestion[0]}`);
                                         }}
                                         className="w-full py-3 bg-primary text-white font-semibold rounded-lg shadow-sm hover:bg-primary/90 transition-all"
                                     >
-                                        Accept {suggestion[0]}
+                                        Accept {legacySuggestion[0]}
                                     </button>
                                     <button 
                                         onClick={() => handleSend("I need a different time.")}
