@@ -1,10 +1,23 @@
 import OpenAI from 'openai';
 import { NextResponse } from 'next/server';
+import { COMPANY_DOCUMENTS } from '../../lib/knowledge_base';
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const messages = body.messages || [];
+
+    // 1. DYNAMIC LOADING LOGIC
+    // Check if any message contains the LOAD_FILE tag
+    let dynamicContent = "";
+    const fileLoadEvent = messages.find((m: any) => m.content && m.content.toString().startsWith('SYSTEM_EVENT: LOAD_FILE:'));
+    
+    if (fileLoadEvent) {
+      const fileName = fileLoadEvent.content.split(':')[2]; // e.g., "cleaning_guide"
+      if (COMPANY_DOCUMENTS[fileName]) {
+        dynamicContent = `You have loaded the file: ${fileName}. Use the content below to answer user questions step-by-step. FILE CONTENT: ${COMPANY_DOCUMENTS[fileName]}`;
+      }
+    }
 
     // Fallback for API key if env var is missing
     const apiKey = process.env.OPENROUTER_API_KEY || 'YOUR_OPENROUTER_KEY_HERE';
@@ -24,6 +37,8 @@ export async function POST(req: Request) {
         {
           role: 'system',
           content: `You are SAM AI.
+
+${dynamicContent}
 
 **LANGUAGE RULE (HIGHEST PRIORITY):**
 1. **DETECT** the language of the user's message (English, Swedish, or Arabic).
@@ -66,6 +81,14 @@ Whenever you ask a question, you **MUST** provide clickable options using this t
 2. AI: "Drive safely. When will you arrive? ||SUGGEST: 10 mins, 30 mins, 1 hour||"
 3. User: "30 mins."
 4. AI: "Got it. I told the manager **30 mins**. Are you done? ||SUGGEST: I am done (Send now), I have more questions||"
+
+**INSTRUCTION MODE (STRICT TEACHER):**
+When the user asks about a task (e.g., 'How do I clean the bathroom?', 'I broke a glass'):
+1. DO NOT list all steps at once.
+2. Give **Step 1 ONLY**.
+3. **Show Image:** Add a tag like \`||IMAGE:gloves||\` or \`||IMAGE:broom||\`.
+4. **Wait:** Ask "Ready for the next step?" and add tag \`||SUGGEST: Done (Next), Repeat||\`.
+5. **Wait** for user input before giving Step 2.
 
 **System Prompt Closure Rule:**
 When the user confirms completion (e.g., clicks 'I am done', says 'finished', or 'send it'):
