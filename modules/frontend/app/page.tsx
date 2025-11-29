@@ -24,7 +24,7 @@ const TRANSLATIONS = {
     btn_questions: "Questions",
     btn_instructions: "Instruction Files",
     tab_home: "Home",
-    tab_history: "My Requests",
+    tab_history: "History",
     tab_settings: "Settings",
     header_common: "Common questions",
     header_workplace_guide: "Workplace Guide",
@@ -43,7 +43,7 @@ const TRANSLATIONS = {
     btn_send_manager: "Send to Manager",
     btn_accept: "Accept",
     btn_pick_time: "Pick another time",
-    status_thinking: "Thinking...",
+    thinking: "Thinking...",
     status_listening: "Listening...",
     status_in_progress: "In Progress",
     status_finished: "Finished",
@@ -88,7 +88,7 @@ const TRANSLATIONS = {
     btn_questions: "Frågor",
     btn_instructions: "Instruktioner",
     tab_home: "Hem",
-    tab_history: "Mina Ärenden",
+    tab_history: "Historik",
     tab_settings: "Inställningar",
     header_common: "Vanliga frågor",
     header_workplace_guide: "Arbetsplatsguide",
@@ -107,7 +107,7 @@ const TRANSLATIONS = {
     btn_send_manager: "Skicka till chefen",
     btn_accept: "Acceptera",
     btn_pick_time: "Välj en annan tid",
-    status_thinking: "Tänker...",
+    thinking: "Tänker...",
     status_listening: "Lyssnar...",
     status_in_progress: "Pågående",
     status_finished: "Avslutat",
@@ -152,7 +152,7 @@ const TRANSLATIONS = {
     btn_questions: "أسئلة",
     btn_instructions: "ملفات التعليمات",
     tab_home: "الرئيسية",
-    tab_history: "طلباتي",
+    tab_history: "السجل",
     tab_settings: "الإعدادات",
     header_common: "الأسئلة الشائعة",
     header_workplace_guide: "دليل العمل",
@@ -171,7 +171,7 @@ const TRANSLATIONS = {
     btn_send_manager: "إرسال للمدير",
     btn_accept: "قبول",
     btn_pick_time: "اختر وقتاً آخر",
-    status_thinking: "يفكر...",
+    thinking: "جاري التفكير...",
     status_listening: "يستمع...",
     status_in_progress: "قيد المعالجة",
     status_finished: "منتهي",
@@ -867,7 +867,7 @@ export default function MainChatScreen() {
             {isLoading && (
                  <div className="flex justify-start">
                     <div className="max-w-[80%] p-4 rounded-2xl bg-white text-gray-500 shadow-md rounded-bl-none animate-pulse">
-                        {t.status_thinking}
+                        {t.thinking}
                     </div>
                  </div>
             )}
@@ -971,8 +971,8 @@ export default function MainChatScreen() {
                 onChange={(e) => setLanguage(e.target.value as any)}
             >
                 <option value="English">English</option>
-                <option value="Swedish">Swedish</option>
-                <option value="Arabic">Arabic</option>
+                <option value="Swedish">Svenska</option>
+                <option value="Arabic">العربية</option>
             </select>
         </div>
       </div>
