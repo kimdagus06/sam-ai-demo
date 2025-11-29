@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import { Home, FileText, Mic, Send, Sparkles, Pill, Clock, Settings as SettingsIcon, CheckCircle, ArrowLeft, Upload, X, Image as ImageIcon, Phone, Shield, Eye, Ear, Hand, Brain, Palette, Globe, PersonStanding, ClipboardList, Trash2, Square, ChevronDown, ChevronUp, Brush, TriangleAlert, Siren, CircleHelp } from 'lucide-react';
 import CallOverlay from './components/CallOverlay';
 import { StatusBar } from './components/StatusBar';
+import { InstructionCard } from './components/InstructionCard';
 
 // Define types for SpeechRecognition
 interface IWindow extends Window {
@@ -956,6 +957,15 @@ export default function MainChatScreen() {
                 const [textPart, suggestionPart] = msg.content.split('[SUGGESTION|');
                 const legacySuggestion = suggestionPart ? suggestionPart.replace(']', '').split('|') : null;
 
+                // Check for Instruction Card Mode
+                if (msg.role === 'assistant' && msg.image) {
+                  return (
+                    <div key={index} className="flex justify-start">
+                      <InstructionCard imageSrc={msg.image} text={textPart || msg.content} />
+                    </div>
+                  );
+                }
+
                 return (
                 <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[80%] p-4 rounded-2xl ${msg.role === 'user' ? 'bg-gray-100 text-gray-900 rounded-br-none' : 'bg-white text-gray-800 shadow-md rounded-bl-none'}`}>
@@ -966,10 +976,6 @@ export default function MainChatScreen() {
                                 {textPart || msg.content}
                             </ReactMarkdown>
                         </div>
-                        
-                        {msg.image && (
-                            <img src={msg.image} alt="Reference" className="rounded-xl mt-2 mb-1 w-full h-48 object-cover border border-gray-200" />
-                        )}
 
                         {legacySuggestion && (
                             <div className="mt-3 bg-purple-50 border border-purple-200 rounded-xl p-4">
