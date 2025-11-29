@@ -144,6 +144,11 @@ export default function MainChatScreen() {
     const textToSend = messageText || input;
     if (!textToSend.trim() || isLoading) return;
 
+    // Capture Late Arrival Time logic
+    if (reportType === 'Late Arrival' && !textToSend.toLowerCase().includes('late') && !textToSend.toLowerCase().includes('done')) {
+        setArrivalEstimate(textToSend);
+    }
+
     const userMessage = { role: 'user', content: textToSend };
     setMessages(prev => [...prev, userMessage]);
     // Clear suggestions when user replies
@@ -355,7 +360,7 @@ export default function MainChatScreen() {
                       <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Details</label>
                       <p className="text-base text-gray-600 mt-1 bg-gray-50 p-3 rounded-xl">
                         {reportType === 'Late Arrival' 
-                            ? `Arriving in ${arrivalEstimate}`
+                            ? `Arriving in ${arrivalEstimate.match(/\d$/) ? arrivalEstimate + ' mins' : arrivalEstimate}`
                             : summaryData.details
                         }
                       </p>
@@ -400,12 +405,12 @@ export default function MainChatScreen() {
                     </div>
                     <h2 className="font-display text-3xl font-bold text-gray-800 text-center">Sent to Manager! Get well soon.</h2>
                   </>
-                ) : successType === 'late' ? (
+            ) : successType === 'late' ? (
                   <>
                     <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-2">
                       <CheckCircle className="w-12 h-12 text-green-600" />
                     </div>
-                    <h2 className="font-display text-3xl font-bold text-gray-800 text-center">Logged Successfully! Drive safe.</h2>
+                    <h2 className="font-display text-3xl font-bold text-gray-800 text-center">Logged Successfully! Get here safely.</h2>
                   </>
                 ) : (
                   <>
