@@ -609,7 +609,7 @@ export default function MainChatScreen() {
                 return (
                 <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[80%] p-4 rounded-2xl ${msg.role === 'user' ? 'bg-primary text-white rounded-br-none' : 'bg-white text-gray-800 shadow-md rounded-bl-none'}`}>
-                         <div className={`prose ${msg.role === 'user' ? 'prose-invert' : ''} max-w-none`}>
+                         <div className="text-sm leading-relaxed">
                             <ReactMarkdown components={{
                                 strong: ({node, ...props}) => <span className="font-bold text-[#9747FF]" {...props} />
                             }}>
@@ -622,12 +622,18 @@ export default function MainChatScreen() {
                         )}
 
                         {/* Render Suggestion Chips */}
-                         {suggestions.length > 0 && !hasDoneSuggestion && (
+                         {suggestions.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-3">
                                 {suggestions.map((s, i) => (
                                     <button 
                                         key={i}
-                                        onClick={() => handleSend(s)}
+                                        onClick={() => {
+                                            if (s.includes('I am done')) {
+                                                setTicketState('summary'); 
+                                            } else {
+                                                handleSend(s);
+                                            }
+                                        }}
                                         className="px-3 py-2 bg-purple-50 text-primary text-sm font-semibold rounded-lg border border-purple-100 hover:bg-purple-100 transition-colors text-left"
                                     >
                                         {s}
