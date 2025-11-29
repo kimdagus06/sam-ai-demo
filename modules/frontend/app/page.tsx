@@ -240,10 +240,10 @@ export default function MainChatScreen() {
 
   // History State - "My Requests"
   const [historyItems, setHistoryItems] = useState([
-    { title: 'Sick Leave', date: 'Nov 27, 2025', status: 'Sent', color: 'text-blue-600 bg-blue-50' },
-    { title: 'Late Arrival', date: 'Nov 20, 2025', status: 'Reviewing', color: 'text-orange-600 bg-orange-50' },
-    { title: 'IT Issue', date: 'Nov 15, 2025', status: 'Done', color: 'text-gray-500' },
-    { title: 'Lost Key', date: 'Nov 10, 2025', status: 'Done', color: 'text-gray-500' }
+    { title: 'Sick Leave', date: 'Nov 27, 2025', status: 'Sent' },
+    { title: 'Late Arrival', date: 'Nov 20, 2025', status: 'Reviewing' },
+    { title: 'IT Issue', date: 'Nov 15, 2025', status: 'Done' },
+    { title: 'Lost Key', date: 'Nov 10, 2025', status: 'Done' }
   ]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -570,8 +570,7 @@ export default function MainChatScreen() {
                         const newItem = {
                             title: reportType === 'Late Arrival' ? 'Late Arrival' : 'Sick Leave',
                             date: 'Just now',
-                            status: 'Sent',
-                            color: 'text-blue-600 bg-blue-50'
+                            status: 'Sent'
                         };
                         setHistoryItems(prev => [newItem, ...prev]);
                         // Logic Check
@@ -876,41 +875,55 @@ export default function MainChatScreen() {
     );
   };
 
-  const renderHistory = () => (
+  const renderHistory = () => {
+    const getTheme = (title: string) => {
+        if (title.includes('Sick')) return { border: 'border-l-4 border-emerald-500', badge: 'text-emerald-700 bg-emerald-50', icon: 'text-emerald-500' };
+        if (title.includes('Late')) return { border: 'border-l-4 border-pink-500', badge: 'text-pink-700 bg-pink-50', icon: 'text-pink-500' };
+        return { border: 'border-l-4 border-blue-500', badge: 'text-blue-700 bg-blue-50', icon: 'text-blue-500' };
+    };
+
+    return (
       <div className="w-full flex flex-col space-y-6 h-full">
          <h2 className="font-display text-2xl font-semibold text-gray-800 pl-2 mb-2">{t.tab_history}</h2>
          
          <div className="flex flex-col space-y-3">
             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider pl-2">{t.status_in_progress}</h3>
-            {historyItems.filter(i => i.status === 'Sent' || i.status === 'Reviewing').map((item, idx) => (
-                <div key={idx} className="p-4 bg-white rounded-xl shadow-md flex justify-between items-center animate-in slide-in-from-bottom-2 duration-300">
-                    <div>
-                        <div className="font-bold text-gray-800 text-lg">{item.title}</div>
-                        <div className="text-xs text-gray-400 font-medium">{item.date}</div>
+            {historyItems.filter(i => i.status === 'Sent' || i.status === 'Reviewing').map((item, idx) => {
+                const theme = getTheme(item.title);
+                return (
+                    <div key={idx} className={`p-4 bg-white rounded-xl shadow-md flex justify-between items-center animate-in slide-in-from-bottom-2 duration-300 ${theme.border}`}>
+                        <div>
+                            <div className="font-bold text-gray-800 text-lg">{item.title}</div>
+                            <div className="text-xs text-gray-400 font-medium">{item.date}</div>
+                        </div>
+                        <span className={`font-semibold px-3 py-1 rounded-full text-sm ${theme.badge}`}>
+                            {item.status}
+                        </span>
                     </div>
-                    <span className={`font-semibold px-3 py-1 rounded-full text-sm ${item.color}`}>
-                        {item.status}
-                    </span>
-                </div>
-            ))}
+                );
+            })}
          </div>
 
          <div className="flex flex-col space-y-3 mt-4">
             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider pl-2">{t.status_finished}</h3>
-            {historyItems.filter(i => i.status === 'Done').map((item, idx) => (
-                <div key={idx} className="p-4 bg-gray-50 rounded-xl flex justify-between items-center animate-in slide-in-from-bottom-2 duration-300">
-                    <div>
-                        <div className="font-bold text-gray-600 text-lg">{item.title}</div>
-                        <div className="text-xs text-gray-400 font-medium">{item.date}</div>
+            {historyItems.filter(i => i.status === 'Done').map((item, idx) => {
+                const theme = getTheme(item.title);
+                return (
+                    <div key={idx} className={`p-4 bg-gray-50 rounded-xl flex justify-between items-center animate-in slide-in-from-bottom-2 duration-300 ${theme.border}`}>
+                        <div>
+                            <div className="font-bold text-gray-600 text-lg">{item.title}</div>
+                            <div className="text-xs text-gray-400 font-medium">{item.date}</div>
+                        </div>
+                        <span className={`font-semibold px-3 py-1 text-sm rounded-full ${theme.badge}`}>
+                            {item.status}
+                        </span>
                     </div>
-                    <span className="font-semibold text-gray-500 px-3 py-1 text-sm">
-                        {item.status}
-                    </span>
-                </div>
-            ))}
+                );
+            })}
          </div>
       </div>
-  );
+    );
+  };
 
   const renderSettings = () => (
       <div className="w-full flex flex-col space-y-6 h-full">
